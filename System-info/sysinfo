@@ -1,0 +1,13 @@
+
+Name          State   Priority  Stack  Num
+*******************************************
+CLI		R	2	111	0
+I'm NEW		R	1	502	2
+IDLE		R	0	105	1
+
+Name          State   Priority  Stack  Num
+*******************************************
+CLI		R	2	111	0
+I'm NEW		R	1	502	3
+I'm NEW		R	1	445	2
+IDLE		R	0	105	1

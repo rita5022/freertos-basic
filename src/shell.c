@@ -4,6 +4,7 @@
 #include <string.h>
 #include "fio.h"
 #include "filesystem.h"
+//#include <stdlib.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -23,6 +24,7 @@ void host_command(int, char **);
 void help_command(int, char **);
 void host_command(int, char **);
 void mmtest_command(int, char **);
+void new_command(int, char **);
 void test_command(int, char **);
 void _command(int, char **);
 
@@ -36,7 +38,8 @@ cmdlist cl[]={
 	MKCL(host, "Run command on host"),
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
-	MKCL(test, "test new function"),
+	MKCL(test, "find fibonacci num"),
+	MKCL(new, "create a new task"),
 	MKCL(, ""),
 };
 
@@ -160,35 +163,94 @@ void help_command(int n,char *argv[]){
 	}
 }
 
+void task(void *pvParameters)
+{
+	fio_printf(1,"I'm NEW task\r\n");	
+	while(1);
+}
+
+void new_command(int n, char *argv[])
+{
+	fio_printf(1,"\r\n");
+	xTaskCreate(task,(signed portCHAR *) "I'm NEW",
+		    512,NULL,tskIDLE_PRIORITY + 1,NULL);
+
+	int handle;
+	int error1;
+	int error2;
+	int error3;
+	handle = host_action(SYS_SYSTEM, "mkdir -p System-info");
+	handle = host_action(SYS_SYSTEM, "touch System-info/sysinfo");
+	handle = host_action(SYS_OPEN, "System-info/sysinfo", 8);
+	if(handle == -1) {
+		fio_printf(1, "Open file error!\n\r");
+		return;
+	}
+
+	signed char buf[1024];
+	vTaskList(buf);
+        //fio_printf(1, "\n\rName          State   Priority  Stack  Num\n\r");
+        //fio_printf(1, "*******************************************\n\r");
+	//fio_printf(1, "%s\r\n", buf + 2);
+	
+
+	//char *buffer = "Test host_write function which can write data to output/syslog\n";
+	char *buffer1 = "\r\nName          State   Priority  Stack  Num\n\r";
+	char *buffer2 = "*******************************************\n\r";
+	signed char *buffer3 = (buf + 2);
+	error1 = host_action(SYS_WRITE, handle, (void *)buffer1, strlen(buffer1));
+	error2 = host_action(SYS_WRITE, handle, (void *)buffer2, strlen(buffer2));
+	error3 = host_action(SYS_WRITE, handle, (void *)buffer3, strlen((const char*)buffer3));
+	
+	if(error1 != 0) {
+		fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error1);
+		host_action(SYS_CLOSE, handle);
+		return;
+	}
+	if(error2 != 0 ) {
+		fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error2);
+		host_action(SYS_CLOSE, handle);
+		return;
+	}
+	if(error3 != 0) {
+		fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error3);
+		host_action(SYS_CLOSE, handle);
+		return;
+	}
+	host_action(SYS_CLOSE, handle);
+}
+
 void test_command(int n, char *argv[]) {
-    int handle;
-    int error;
 
-    fio_printf(1, "\r\n");
-    
-    handle = host_action(SYS_SYSTEM, "mkdir -p output");
-    handle = host_action(SYS_SYSTEM, "touch output/syslog");
+	int num=0;	
+	if(n==2)
+	{
+		int length = strlen(argv[1]);
+		fio_printf(1,"\r\n");
 
-    handle = host_action(SYS_OPEN, "output/syslog", 8);
-    if(handle == -1) {
-        fio_printf(1, "Open file error!\n\r");
-        return;
-    }
+		for(int i = 0; i < length; i++)
+			num = num * 10 + (argv[1][i]-'0');
 
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
-    error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
-    if(error != 0) {
-        fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
-        host_action(SYS_CLOSE, handle);
-        return;
-    }
+		int previous = -1;
+		int result = 1;
+		int sum = 0;
 
-    host_action(SYS_CLOSE, handle);
+		for(int i = 0; i <= num; i++)
+		{
+			sum = result + previous;
+			previous = result;
+			result = sum;		
+		}
+
+		fio_printf(1,"Fibonacci : number %d is %d \r\n\r\n",num, result);
+	}
+	else
+		fio_printf(1,"\r\ninput parameter need to be less or equal to 2\r\n\r\n");
 }
 
 void _command(int n, char *argv[]){
     (void)n; (void)argv;
-    fio_printf(1, "\r\n");
+    fio_printf(1, "n");
 }
 
 cmdfunc *do_command(const char *cmd){
