@@ -202,21 +202,21 @@ void new_command(int n, char *argv[])
 	error2 = host_action(SYS_WRITE, handle, (void *)buffer2, strlen(buffer2));
 	error3 = host_action(SYS_WRITE, handle, (void *)buffer3, strlen((const char*)buffer3));
 	
-	if(error1 != 0) {
-		fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error1);
+	if(error1 != 0 || error1 != 0 || error1 != 0)
+	{
+		if(error1 != 0)
+			fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error1);
+
+		if(error2 != 0 )
+			fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error2);
+
+		if(error3 != 0)
+			fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error3);
+
 		host_action(SYS_CLOSE, handle);
 		return;
 	}
-	if(error2 != 0 ) {
-		fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error2);
-		host_action(SYS_CLOSE, handle);
-		return;
-	}
-	if(error3 != 0) {
-		fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error3);
-		host_action(SYS_CLOSE, handle);
-		return;
-	}
+
 	host_action(SYS_CLOSE, handle);
 }
 
